@@ -8,6 +8,7 @@ from itertools import count
 from lib import extract_path, get_neighbours
 
 HOST = "127.0.0.1"
+ENLAPSED_60_SECONDS = False
 
 
 class Timer(threading.Thread):
