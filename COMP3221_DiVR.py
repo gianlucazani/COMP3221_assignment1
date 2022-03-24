@@ -33,4 +33,4 @@ arguments = sys.argv[1:]
 node = Node(arguments[0], arguments[1], arguments[2])
 node.config()
 node.start()
-#node.say_hello()
+#node.say_hi()

@@ -30,7 +30,7 @@ class PathFinder(threading.Thread):
         self.node = node
         self.paused = True
 
-    def run(self):  # runs Dijkstra shortest path algorithm
+    def run(self):
         """
         This thread runs the Dijkstra's shortest path finding algorithm
         """
@@ -38,75 +38,50 @@ class PathFinder(threading.Thread):
 
         network_topology = self.node.network_topology.copy()  # save node network topology as a copy so that the original can be modified while the algorithm is running
         network_topology.fillna(np.inf, inplace=True)  # replace NaN values with +inf
-        # print(network_topology)
-        # DEL possible_destinations = network_topology.index  # save all possible destinations in a list as node ids, it will contain only the ids discovered so far
         unique_identifier = count()  # resolves ties when sorting dictionaries in priority queue
-        shortest_paths = self.node.shortest_paths
-        # shortest_paths = dict()  # (key = destination_node_id, value = (cost, unique_identifier, {"id": destination_id, "previous": previous_node}))
-
-        # shortest_paths[self.node.node_id] = (0.0, self.node.node_id)
-        # Initialize shortest_paths with node neighbours information
-        # for destination in possible_destinations:
-        #     previous = self.node.node_id
-        #     if network_topology[self.node.node_id][destination] == np.inf:  # for non-neighbour nodes, set previous to empty string ""
-        #         previous = ""
-        #     # save information in shortest_path dictionary
-        #     shortest_paths[destination] = (
-        #         network_topology[self.node.node_id][destination], next(unique_identifier),
-        #         {"id": destination, "previous": previous})
+        shortest_paths = self.node.shortest_paths  # save node shortest_paths dictionary as a copy so that the original can be modified while the algorithm is running
 
         # ----------------------
 
         # ------ DIJKSTRA ------
         # ------- set up -------
 
-        #  initialize priority queue and shortes paths dictionary of node, where the result will be stored
+        #  initialize priority queue and shortest paths dictionary of node, where the result will be stored
         priority_queue = queue.PriorityQueue()  # priority queue where unexplored nodes will be stored. lower cost -> higher priority
         priority_queue.put((0.0, next(unique_identifier), {"id": self.node.node_id, "previous": self.node.node_id}))
         for node_id in network_topology.index:
             if node_id != self.node.node_id:
                 shortest_paths[node_id] = (np.inf, None)
-                # priority_queue.put((np.inf, next(unique_identifier), {'id': node_id, 'previous': None}))
-        # fill priority queue, ties will be resolved thanks to the unique_identifier
-        # for key in shortest_paths:
-        #     priority_queue.put(shortest_paths[key])
+
         visited = set()  # set of visited nodes (contains ids)
-        # visited.add(
-        #     self.node.node_id)  # add "A" to visited nodes because we already inserted neighbours information in shortest_path dictionary (i.e. it is like we already explored it)
 
         # ----- algorithm -----
 
-        # current_node = priority_queue.get()  # remove A from priority queue
         while not priority_queue.empty():
-            # print(shortest_paths)
-            current_node = priority_queue.get()  # take highest priority node (lowest cost)
+            current_node = priority_queue.get()  # take highest priority node (lowest cost) and start visiting it
             for neighbour in get_neighbours(
                     current_node[2]['id'],
-                    network_topology):  # for each possible neighbour (i.e. indexes of the network topology)
-                # print(f"Visiting neighbour {neighbour} of node {current_node[2]['id'] }")
+                    network_topology):  # for each current_node neighbour
                 if not visited.__contains__(
                         neighbour):  # if the neighbour node (neighbour) has not been visited yet
-                    distance_current_to_neighbour = network_topology[current_node[2]['id']][
-                        neighbour]  # save distance from current node to the neighbour node
-                    # print(f"Distance from {current_node[2]['id']} to {neighbour}: {distance_current_to_neighbour}")
-                    distance_start_to_current = shortest_paths[current_node[2]['id']][
-                        0]  # save value of distance from start to current node
-                    priority_queue.put((distance_start_to_current, next(unique_identifier), {"id": neighbour,
-                                                                                             "previous":
-                                                                                                 current_node[2][
-                                                                                                     "id"]}))  # insert neighbour with cost from start node in priority queue
-                    # print(f"Distance from A to {current_node[2]['id']}: {distance_start_to_current}")
-                    if (distance_start_to_current + distance_current_to_neighbour) < shortest_paths[neighbour][
-                        0]:  # if distance to current + distance from current to neighbour is lower than the previously stored distance from start to neighbour, replace value
-                        # replacing distance cost to neighbour node (neighbour) with the sum of going to current node + current to neighbour
+                    cost_start_to_current = shortest_paths[current_node[2]['id']][
+                        0]  # save distance from start node to current_node
+                    cost_current_to_neighbour = network_topology[current_node[2]['id']][
+                        neighbour]  # save distance from current_node to the neighbour of current_node
+                    priority_queue.put((cost_start_to_current, next(unique_identifier), {"id": neighbour,
+                                                                                         "previous":
+                                                                                             current_node[2][
+                                                                                                 "id"]}))  # insert neighbour with cost from start node in priority queue
+
+                    # if the distance to reach the neighbour of the current visited node from the current visited node +
+                    # the distance for reaching the current visited node from the start node is
+                    # less than the stored distance for reaching the neighbor node from the start node
+                    # then save the sum of the two previous mentioned distances as new distance from start to neighbour
+                    # and save the current node as previous node in the path for reaching the neighbour from the start
+                    if (cost_start_to_current + cost_current_to_neighbour) < shortest_paths[neighbour][0]:
                         shortest_paths[neighbour] = (
-                            distance_start_to_current + distance_current_to_neighbour,  # distance
+                            cost_start_to_current + cost_current_to_neighbour,  # distance
                             current_node[2]['id'])
-                        #     (
-                        # distance_start_to_current + distance_current_to_neighbour,  # distance
-                        # self.node.shortest_paths[neighbour][1],  # keep the same unique_identifier
-                        # {"id": neighbour,
-                        #  "previous": current_node[2]['id']})  # update the previous node with the current node
 
             visited.add(current_node[2]['id'])  # add current node to visited
 
@@ -130,12 +105,12 @@ class Sender(threading.Thread):
 
     def run(self):
         print(f"{self.node.node_id} sender started")
-        while not self.paused:
+        while not self.paused:  # try to send data until the thread is not stopped, if not stopped it will pass through exceptions without stopping
             try:
                 while 1:
-                    to_send = self.node.network_topology.to_json()
+                    to_send = self.node.network_topology.to_json()  # converts network_topology DataFrame to json
                     time.sleep(5)
-                    for destination_port in list(self.node.neighbours_ports.values()):
+                    for destination_port in list(self.node.neighbours_ports.values()):  # send data to all neighbours
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             # print(f"Port to send: {port_to_send}")
                             # print(f"{self.node.node_id} wants to send: {self.node.network_topology}")
@@ -143,9 +118,7 @@ class Sender(threading.Thread):
                             s.sendall(bytes(to_send, encoding="utf-8"))
                             s.close()
             except Exception as e:
-                print(f"Error: {e}")
-                print(f"Sender {self.node.node_id}: Can't connect to the Socket port: {destination_port}")
-                pass
+                print(f"Sender {self.node.node_id} error when communincating with port {destination_port}: {e}")
 
     def pause(self):
         self.paused = True
@@ -174,14 +147,15 @@ class Listener(threading.Thread):
                             print("didn't get data")
                             client.close()
                             pass
-                        update = pd.read_json(received.decode("utf-8"))
+                        update = pd.read_json(
+                            received.decode("utf-8"))  # update packet is a DataFrame and gets converted here from json
                         client.close()  # close the client connection
                         # print(f"{self.node.node_id} received: {update}")
-                        self.node.update_network_topology(update)
+                        self.node.update_network_topology(
+                            update)  # update node network topology with the new update packet
                         print(f"{self.node.node_id} network topology now: {self.node.network_topology}")
             except Exception as e:
-                print(f"Error: {e}")
-                print(f"Listener {self.node.node_id}: Can't connect to the Socket")
+                print(f"Listener {self.node.node_id} Error: {e}")
 
     def pause(self):
         self.paused = True
@@ -202,10 +176,8 @@ class Node:
         self.port_no = port_no
         self.config_file = config_file
         self.neighbours_ports = dict()
-        # self.network_topology = pd.DataFrame(data=np.nan, index=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
-        #                                     columns=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"])
-        self.network_topology = pd.DataFrame(data=[0.0], index=[self.node_id], columns=[self.node_id])
         self.shortest_paths = dict()  # will store entries in the form: (key: destination_id, value: (cost_to_dest, previous_node))
+        self.network_topology = pd.DataFrame(data=[0.0], index=[self.node_id], columns=[self.node_id])
 
     def config(self):
         """
@@ -222,27 +194,21 @@ class Node:
             ids = list()
             costs = list()
             for index, line in enumerate(file):
-                if index:
+                if index:  # skips first line and reads while new lines are present
                     info = line.replace("\n", "").strip().split(
                         " ")  # info = [neigh_id, path_cost to neigh, neigh_port_no]
                     ids.append(info[0])
                     costs.append(info[1])
                     self.neighbours_ports[info[0]] = info[2]
-                    # self.network_topology[self.node_id][info[0]] = float(info[1])
 
-            config = pd.Series(data=costs, index=ids)
-            new_index = config.index.union(self.network_topology.index)
+            neighbours_series = pd.Series(data=costs, index=ids)
+            new_index = neighbours_series.index.union(self.network_topology.index)
             self.network_topology = self.network_topology.reindex(new_index, fill_value=np.nan)
-            self.network_topology[self.node_id] = config
+            self.network_topology[self.node_id] = neighbours_series
             self.network_topology[self.node_id][self.node_id] = float(0)
-            # update = pd.Series(data=costs, index=ids, name=self.node_id)
-            # new_index = update.index.union(self.network_topology.index)
-            # self.network_topology = self.network_topology.reindex(new_index, fill_value=np.nan)
-            # self.network_topology.update(update)
-            print(f"Network topology now: \n {self.network_topology}")
+            print(f"My starting network topology: \n {self.network_topology}")
         except Exception as e:
-            print(e)
-            print(f"{self.node_id} Error in opening configuration file")
+            print(f"{self.node_id} error in configuration: {e}")
 
     def update_network_topology(self, update):
         """
@@ -267,19 +233,18 @@ class Node:
 
         :param update: DataFrame representing network topology sent by a neighbour
         """
-        # self.network_topology = pd.concat((self.network_topology, update), axis=1)
-        # updated = update.combine_first(self.network_topology).reindex(self.network_topology.index)
-        # updated[self.node_id] = self.network_topology[self.node_id]
-        # self.network_topology = updated
         self.network_topology = update.combine_first(self.network_topology)
 
     def start(self):
+        """
+        Turns on the node and starts threads for sending, listening, computing shortest path and setting timer before routing algorithm is started for first time
+        """
         listener = Listener(self)
         listener.start()
         sender = Sender(self)
         sender.start()
         path_finder = PathFinder(self)
-        timer = Timer(60, path_finder.run)
+        timer = Timer(60, path_finder.run)  # set timer after which the path finding algorithm will be run
         timer.start()
 
     def print_shortest_paths(self):
@@ -293,15 +258,17 @@ class Node:
                 print(
                     f"Least cost path from {self.node_id} to {destination}: {extract_path(self.shortest_paths, self.node_id, destination)}, link cost: {self.shortest_paths[destination][0]} ")
 
-    def say_hello(self):
+    def say_hi(self):
+        """
+        Utility method for printing information about node
+        """
         print("Hi! I'm node: ")
         print(self.node_id)
         print("My port number is: ")
         print(self.port_no)
         print("The config file is: ")
         print(self.config_file)
-        print("My neighbours are: ")
-        for key in self.neighbours.keys():
-            print(self.neighbours[key][1].node_id)
-            print(self.neighbours[key][1].port_no)
-            print(self.neighbours[key][0])
+        print("My neighbours ports:")
+        print(self.neighbours_ports)
+        print("My network topology is: ")
+        print(self.network_topology)

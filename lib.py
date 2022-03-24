@@ -7,8 +7,7 @@ def get_neighbours(node_id, network_topology):
     :param network_topology: DataFrame containing network topology
     :return: neighbours ids as a list
     """
-    neighbours = network_topology.index[network_topology[node_id] != np.inf].tolist()  # returns indexes of nodes which distance from node_id is not +inf (i.e. neighbours)
-    # print(f"Neighbours of {node_id}: {neighbours}")
+    neighbours = network_topology.index[network_topology[node_id] != np.inf].tolist()  # indexes of nodes which distance from node_id is not +inf (i.e. neighbours)
     if neighbours.__len__() > 1:
         neighbours.remove(node_id)
     return neighbours
