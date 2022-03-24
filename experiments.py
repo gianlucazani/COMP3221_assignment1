@@ -26,15 +26,16 @@ dataframe1 = pd.DataFrame({'A': ["x", "x", "x"]},
 dataframe2 = pd.DataFrame({'B': ["y", "y", "y"],
                            'D': ["y", "y", "y"],
                            'F': ["y", "y", "y"]},
-                          index=['A', 'B', 'E'])
+                          index=['A', 'D', 'E'])
 
-dataframe3 = pd.DataFrame({'B': ["y", "y", "y"],
+dataframe3 = pd.DataFrame({'A': ["y", "y", "y"],
                            'D': ["y", "y", "y"],
                            'F': ["y", "y", "y"]},
-                          index=['A', 'B', 'E'])
+                          index=['A', 'B', 'G'])
 
 # print(dataframe1.compare(dataframe2))
-print(dataframe2.compare(dataframe3).empty)
+print(dataframe1.combine_first(dataframe3))
+print(list(set(dataframe2.index) - set(dataframe3.index)))
 
 
 # # s = pd.Series(data=["z", "z", "z", "z", "z"], index=['A', 'B', 'E', 'G', 'H'])
