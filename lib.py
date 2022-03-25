@@ -7,17 +7,30 @@ def received_new_information(network_topology, update):
     than the node network_topology
     :param network_topology: Node network topology before the update
     :param update: Update packet sent by neighbours
-    :return: True if new information contained in update, False if no new information
+    :return: Two booleans, the first is true if the two DataFrames are different in shape (i.e. different columns and rows index), the second
+    is true if the two DataFrames are equal in shape but differ for one or more cell values (this occurs when a link cost is changed after first convergence)
     """
-    try:
-        # the DataFrame.compare() method retruns a DataFrame containing the differences, so if it is empty, no new information arrived
-        differences = network_topology.compare(update.combine_first(network_topology))
-        return not differences.empty
-    except ValueError as ve:
-        # the DataFrame.compare() method raises ValueError if the two dataframes have not the same shape
-        # In this scope, not having the same shape means that the updated dataframe contains more information than the old one
-        # So return True
-        return True
+    # the DataFrame.compare() method returns a DataFrame containing the differences, so if it is empty, no new information arrived
+    updated = update.combine_first(network_topology)
+    updated_cols = list(updated.columns)
+    updated_rows = list(updated.index.values)
+    old_cols = list(network_topology.columns)
+    old_rows = list(network_topology.index.values)
+    different_shape = updated_cols != old_cols or updated_rows != old_rows
+    if not different_shape:
+
+        for col in updated_cols:
+            for row in updated_rows:
+                if not (np.isnan(network_topology[col][row]) and np.isnan(updated[col][row])) \
+                        and (np.isnan(network_topology[col][row]) or np.isnan(updated[col][row])) \
+                        and network_topology[col][row] != updated[col][row]:
+                    return False, True
+        return True, False
+        # rows_with_not_matching_cells = update.combine_first(network_topology)[network_topology.ne(update.combine_first(network_topology)).any(axis=1)]
+        # print(rows_with_not_matching_cells)
+        # return not rows_with_not_matching_cells.empty
+    else:
+        return True, False
 
 
 def get_neighbours(node_id, network_topology):
@@ -33,15 +46,15 @@ def get_neighbours(node_id, network_topology):
     return neighbours
 
 
-def extract_path(shortest_paths_dict, start, to):
+def extract_path(shortest_paths_dict, _from, _to):
     """
     Travels backwards from destination (to) to start node saving previous nodes until builds the complete path
     :param shortest_paths_dict: node dictionary containing shortest path information as (key: destination_id, value: (cost_to_dest, previous_node))
-    :param start: start node we want to get the paths to destinations
-    :param to: destination node id
+    :param _from: start node we want to get the paths to destinations
+    :param _to: destination node id
     :return: string of subsequent nodes from starting node for reaching destination
     """
-    if start == to:
-        return start
+    if _from == _to:
+        return _from
     else:
-        return extract_path(shortest_paths_dict, start, shortest_paths_dict[to][1]) + to
+        return extract_path(shortest_paths_dict, _from, shortest_paths_dict[_to][1]) + _to

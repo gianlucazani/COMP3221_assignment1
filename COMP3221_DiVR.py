@@ -34,3 +34,10 @@ node = Node(arguments[0], arguments[1], arguments[2])
 node.config()
 node.start()
 #node.say_hi()
+print(f"Do you want to change link costs for node {arguments[0]}? [Y or N]")
+change_link_cost = input()
+if change_link_cost == "Y":
+    print("Type link cost to change in the format [TO] [NEW_COST]. (e.g. C 2.8)")
+    change_request = input().strip().split(" ")  # change_request = [TO, NEW_COST]
+    print(node.change_link_cost(change_request[0], change_request[1]))
+

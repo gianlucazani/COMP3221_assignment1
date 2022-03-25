@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import numpy as np
 import pandas as pd
 
 from assignment1.lib import extract_path, received_new_information
@@ -28,3 +29,17 @@ class Test(TestCase):
         self.assertEqual(received_new_information(dataframe2, dataframe1), True)
         self.assertEqual(received_new_information(dataframe1, dataframe2), True)
         self.assertEqual(received_new_information(dataframe2, dataframe3), False)
+
+    def test_received_new_information(self):
+        dataframe1 = pd.DataFrame({'B': [0.0, 0.0, 0.0],
+                                   'D': [0.0, 0.0, np.nan],
+                                   'F': [0.0, np.nan, 0.0]},
+                                  index=['A', 'B', 'E'])
+
+        dataframe2 = pd.DataFrame({'B': [100.0, 0.0, np.nan],
+                                   'D': [0.0, np.nan, 0.0],
+                                   'F': [0.0, 0.0, 0.0]},
+                                  index=['A', 'B', 'E'])
+        different_shape, different_cell = received_new_information(dataframe1, dataframe2)
+        self.assertEqual(different_shape, False)
+        self.assertEqual(different_cell, True)
