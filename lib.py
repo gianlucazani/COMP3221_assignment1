@@ -4,13 +4,13 @@ import numpy as np
 def received_new_information(network_topology, update):
     """
     Check whether the update packet brings real updates or it is just a redundant DataFrame that contains no more information
-    than the node network_topology
+    than the node network_topology. It will check both difference in chape (new nodes joined, new nodes can be reached, ...) and
+    if there are differences in costs when shape is the same.
     :param network_topology: Node network topology before the update
     :param update: Update packet sent by neighbours
     :return: Two booleans, the first is true if the two DataFrames are different in shape (i.e. different columns and rows index), the second
     is true if the two DataFrames are equal in shape but differ for one or more cell values (this occurs when a link cost is changed after first convergence)
     """
-    # the DataFrame.compare() method returns a DataFrame containing the differences, so if it is empty, no new information arrived
     updated = update.combine_first(network_topology)
     updated_cols = list(updated.columns)
     updated_rows = list(updated.index.values)
