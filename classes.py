@@ -44,13 +44,16 @@ class PathFinder(threading.Thread):
 
         network_topology = self.node.network_topology.copy()  # save node network topology as a copy so that the original can be modified while the algorithm is running
         network_topology.fillna(np.inf, inplace=True)  # replace NaN values with +inf
+        network_topology.replace(np.nan, np.inf)
+
+        # We want to compute shortest paths only from alive nodes and to alive nodes
         all_nodes = list(
             network_topology.index.values)  # list of all nodes built from neighbour information of alive nodes (we cannot assume that all of them are reachable)
         nodes_alive = list(network_topology)  # list of actually alive nodes that
         nodes_to_work_with = list(set(all_nodes) - set(nodes_alive))
-        print(f"Nodes to work with: {nodes_to_work_with}")
+        # DEL print(f"Nodes to work with: {nodes_to_work_with}")
         network_topology.drop(labels=nodes_to_work_with, inplace=True)  # remove lines corresponding to neighbours of alive nodes that are not alive themselves
-        print(f"Working with {network_topology}")
+        # DEL print(f"Working with {network_topology}")
         unique_identifier = count()  # resolves ties when sorting dictionaries in priority queue
         shortest_paths = self.node.shortest_paths  # save node shortest_paths dictionary as a copy so that the original can be modified while the algorithm is running
 
@@ -121,12 +124,12 @@ class Sender(threading.Thread):
         while not self.paused:  # try to send data until the thread is not stopped, if not stopped it will pass through exceptions without stopping
             try:
                 while 1:
-                    to_send = self.node.network_topology.to_json()  # converts network_topology DataFrame to json
-                    time.sleep(5)
+                    time.sleep(10)
                     for destination_port in list(self.node.neighbours_ports.values()):  # send data to all neighbours
+                        to_send = self.node.network_topology.to_json()  # converts network_topology DataFrame to json
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             # print(f"Port to send: {port_to_send}")
-                            # print(f"{self.node.node_id} wants to send: {self.node.network_topology}")
+                            print(f"{self.node.node_id} wants to send: {self.node.network_topology}")
                             try:
                                 s.connect((HOST, int(destination_port)))
                             except Exception as e:
@@ -134,8 +137,7 @@ class Sender(threading.Thread):
                             s.sendall(bytes(to_send, encoding="utf-8"))
                             s.close()
             except Exception as e:
-                pass
-                # print(f"Sender {self.node.node_id} error when communincating with port {destination_port}: {e}")
+                print(f"Sender {self.node.node_id} error when communicating with port {destination_port}: {e}")
 
     def pause(self):
         self.paused = True
@@ -168,14 +170,19 @@ class Listener(threading.Thread):
                         update = pd.read_json(
                             received.decode("utf-8"))  # update packet is a DataFrame and gets converted here from json
                         client.close()  # close the client connection
-                        # print(f"{self.node.node_id} received: {update}")
+                        print(f"{self.node.node_id} received: {update}")
 
                         # If the packet brings really new information
-                        if received_new_information(self.node.network_topology, update):
+                        different_shape, link_cost_changed = received_new_information(self.node.network_topology, update)
+                        if different_shape or link_cost_changed:
                             # Update node network topology
                             self.node.update_network_topology(
                                 update)  # update node network topology with the new update packet
                             print(f"{self.node.node_id} network topology now: {self.node.network_topology}")
+                            # if link_cost_changed:
+                            #     print("---------------- RECEIVED CHANGED LINK COST -------------------")
+                            #     # time.sleep(6)
+
                             # If the first 60 second waiting time is elapsed, run the path finding algorithm every time new information are received
                             if ELAPSED_60_SECONDS:
                                 print(
@@ -225,7 +232,7 @@ class Node:
                     info = line.replace("\n", "").strip().split(
                         " ")  # info = [neigh_id, path_cost to neigh, neigh_port_no]
                     ids.append(info[0])
-                    costs.append(info[1])
+                    costs.append(float(info[1]))
                     self.neighbours_ports[info[0]] = info[2]
 
             neighbours_series = pd.Series(data=costs, index=ids)
@@ -241,7 +248,8 @@ class Node:
         """
         Updates node known network topology.
         The resulting network topology DataFrame will be a union of the old one and the update one (new rows and columns will be added if missing in the old),
-        common values will be updated with update values
+        common values will be updated with update values.
+        Doesn't let other nodes update self column.
         Example (note that dash values in the result will be replaced by NaN):
 
             self.network_topology       |       update
@@ -260,7 +268,10 @@ class Node:
 
         :param update: DataFrame representing network topology sent by a neighbour
         """
+
+        self_column = self.network_topology[self.node_id]
         self.network_topology = update.combine_first(self.network_topology)
+        self.network_topology[self.node_id] = self_column.reindex(self.network_topology[self.node_id].index)
 
     def start(self):
         """
@@ -279,10 +290,24 @@ class Node:
         Prints assignment desired output with all shortest paths and relative cost for reaching each node in the network
         """
         print(f"I am node {self.node_id}")
-        for destination in self.shortest_paths.keys():
+        for destination in self.shortest_paths.keys():  # print only for nodes for which the shortest path has been found (i.e. alive nodes)
             if destination != self.node_id:  # and self.shortest_paths[destination][0] != np.inf:  # the second condition is for coping with unreachable nodes (e.g. a node that used to exist in the network but then failed)
                 print(
                     f"Least cost path from {self.node_id} to {destination}: {extract_path(self.shortest_paths, self.node_id, destination)}, link cost: {self.shortest_paths[destination][0]} ")
+
+    def change_link_cost(self, _to, cost):
+        try:
+            if not list(self.neighbours_ports.keys()).__contains__(_to):
+                return f"{_to} node is not a neighbour of mine ({self.node_id})"
+            if not float(cost) > 0:
+                return f"{cost} not valid, please insert a valid cost (> 0)"
+
+            self.network_topology.at[_to, self.node_id] = float(cost)
+            print(f"New network topology: {self.network_topology}")
+            return "Link cost changed, you will notice the update in few seconds"
+        except Exception as e:
+            return "Wrong input format"
+
 
     def say_hi(self):
         """
@@ -298,3 +323,5 @@ class Node:
         print(self.neighbours_ports)
         print("My network topology is: ")
         print(self.network_topology)
+
+

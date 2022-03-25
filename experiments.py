@@ -28,14 +28,29 @@ dataframe2 = pd.DataFrame({'B': ["y", "y", "y"],
                            'F': ["y", "y", "y"]},
                           index=['A', 'D', 'E'])
 
-dataframe3 = pd.DataFrame({'A': ["y", "y", "y"],
-                           'D': ["y", "y", "y"],
-                           'F': ["y", "y", "y"]},
-                          index=['A', 'B', 'G'])
+dataframe3 = pd.DataFrame({'A': ["y", "y", "y", "f"],
+                           'D': ["y", "y", "y", "c"]},
+                          index=['A', 'B', 'G', "K"])
 
+dataframe4 = pd.DataFrame({'A': ["g", "y", "y", "Y"],
+                           'D': ["y", "y", "y", "y"],
+                           'F': [0.0, 0.0, 0.0, np.nan]},
+                          index=['A', 'B', 'G', "F"])
+
+dataframe5 = dataframe4.combine_first(dataframe3)
+
+print(np.nan != np.nan)
+print(dataframe5)
+print(np.isnan(dataframe5["F"]["K"]))
+
+#print(dataframe3.combine_first(dataframe1))
+
+# series = pd.Series(data=["1", "2", "3"], index=["A", "B", "C"], name="A")
+# series2 = pd.Series(data=["1", "2", "3", "4"], index=["A", "B", "C", "D"], name="A")
+# print(series.reindex(series2.index))
 # print(dataframe1.compare(dataframe2))
-print(dataframe1.combine_first(dataframe3))
-print(list(set(dataframe2.index) - set(dataframe3.index)))
+# print(dataframe1.combine_first(dataframe3))
+# print(list(set(dataframe2.index) - set(dataframe3.index)))
 
 
 # # s = pd.Series(data=["z", "z", "z", "z", "z"], index=['A', 'B', 'E', 'G', 'H'])
