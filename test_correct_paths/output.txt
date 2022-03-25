@@ -1,0 +1,120 @@
+I am node A 
+Shortest path from A to B is: ['A', 'B'], cost: 2.0 
+Shortest path from A to C is: ['A', 'C'], cost: 2.0 
+Shortest path from A to E is: ['A', 'B', 'E'], cost: 4.0 
+Shortest path from A to G is: ['A', 'B', 'G'], cost: 4.3 
+Shortest path from A to D is: ['A', 'C', 'D'], cost: 3.6 
+Shortest path from A to F is: ['A', 'C', 'F'], cost: 3.6 
+Shortest path from A to H is: ['A', 'C', 'H'], cost: 5.0 
+Shortest path from A to J is: ['A', 'B', 'G', 'J'], cost: 6.2 
+Shortest path from A to I is: ['A', 'B', 'G', 'J', 'I'], cost: 8.6 
+
+
+I am node B 
+Shortest path from B to A is: ['B', 'A'], cost: 2.0 
+Shortest path from B to E is: ['B', 'E'], cost: 2.0 
+Shortest path from B to G is: ['B', 'G'], cost: 2.3 
+Shortest path from B to C is: ['B', 'A', 'C'], cost: 4.0 
+Shortest path from B to D is: ['B', 'G', 'D'], cost: 4.0 
+Shortest path from B to H is: ['B', 'G', 'H'], cost: 3.8 
+Shortest path from B to J is: ['B', 'G', 'J'], cost: 4.2 
+Shortest path from B to F is: ['B', 'A', 'C', 'F'], cost: 5.5 
+Shortest path from B to I is: ['B', 'G', 'J', 'I'], cost: 6.6 
+
+
+I am node C 
+Shortest path from C to A is: ['C', 'A'], cost: 2.0 
+Shortest path from C to D is: ['C', 'D'], cost: 1.6 
+Shortest path from C to F is: ['C', 'F'], cost: 1.6 
+Shortest path from C to H is: ['C', 'H'], cost: 3.0 
+Shortest path from C to B is: ['C', 'A', 'B'], cost: 4.0 
+Shortest path from C to G is: ['C', 'D', 'G'], cost: 3.3 
+Shortest path from C to J is: ['C', 'H', 'J'], cost: 4.2 
+Shortest path from C to E is: ['C', 'A', 'B', 'E'], cost: 5.3 
+Shortest path from C to I is: ['C', 'H', 'J', 'I'], cost: 6.6 
+
+
+I am node E 
+Shortest path from E to B is: ['E', 'B'], cost: 2.0 
+Shortest path from E to G is: ['E', 'G'], cost: 2.0 
+Shortest path from E to A is: ['E', 'B', 'A'], cost: 4.0 
+Shortest path from E to D is: ['E', 'G', 'D'], cost: 3.7 
+Shortest path from E to H is: ['E', 'G', 'H'], cost: 3.5 
+Shortest path from E to J is: ['E', 'G', 'J'], cost: 3.9 
+Shortest path from E to C is: ['E', 'B', 'A', 'C'], cost: 5.3 
+Shortest path from E to F is: ['E', 'G', 'D', 'F'], cost: 5.2 
+Shortest path from E to I is: ['E', 'G', 'J', 'I'], cost: 6.3 
+
+
+I am node G 
+Shortest path from G to B is: ['G', 'B'], cost: 2.3 
+Shortest path from G to D is: ['G', 'D'], cost: 1.7 
+Shortest path from G to E is: ['G', 'E'], cost: 2.0 
+Shortest path from G to H is: ['G', 'H'], cost: 1.5 
+Shortest path from G to J is: ['G', 'J'], cost: 1.9 
+Shortest path from G to A is: ['G', 'B', 'A'], cost: 4.3 
+Shortest path from G to C is: ['G', 'D', 'C'], cost: 3.3 
+Shortest path from G to F is: ['G', 'D', 'F'], cost: 3.2 
+Shortest path from G to I is: ['G', 'J', 'I'], cost: 4.3 
+
+
+I am node D 
+Shortest path from D to C is: ['D', 'C'], cost: 1.6 
+Shortest path from D to F is: ['D', 'F'], cost: 1.5 
+Shortest path from D to G is: ['D', 'G'], cost: 1.7 
+Shortest path from D to A is: ['D', 'C', 'A'], cost: 3.6 
+Shortest path from D to H is: ['D', 'C', 'H'], cost: 3.2 
+Shortest path from D to B is: ['D', 'G', 'B'], cost: 4.0 
+Shortest path from D to E is: ['D', 'G', 'E'], cost: 3.7 
+Shortest path from D to J is: ['D', 'G', 'J'], cost: 3.6 
+Shortest path from D to I is: ['D', 'G', 'J', 'I'], cost: 6.0 
+
+
+I am node F 
+Shortest path from F to C is: ['F', 'C'], cost: 1.6 
+Shortest path from F to D is: ['F', 'D'], cost: 1.5 
+Shortest path from F to H is: ['F', 'H'], cost: 1.7 
+Shortest path from F to A is: ['F', 'C', 'A'], cost: 3.6 
+Shortest path from F to G is: ['F', 'D', 'G'], cost: 3.2 
+Shortest path from F to J is: ['F', 'H', 'J'], cost: 2.9 
+Shortest path from F to B is: ['F', 'C', 'A', 'B'], cost: 5.5 
+Shortest path from F to E is: ['F', 'D', 'G', 'E'], cost: 5.2 
+Shortest path from F to I is: ['F', 'H', 'J', 'I'], cost: 5.3 
+
+
+I am node H 
+Shortest path from H to C is: ['H', 'C'], cost: 3.0 
+Shortest path from H to F is: ['H', 'F'], cost: 1.7 
+Shortest path from H to G is: ['H', 'G'], cost: 1.5 
+Shortest path from H to J is: ['H', 'J'], cost: 1.2 
+Shortest path from H to A is: ['H', 'C', 'A'], cost: 5.0 
+Shortest path from H to D is: ['H', 'C', 'D'], cost: 3.2 
+Shortest path from H to B is: ['H', 'G', 'B'], cost: 3.8 
+Shortest path from H to E is: ['H', 'G', 'E'], cost: 3.5 
+Shortest path from H to I is: ['H', 'J', 'I'], cost: 3.6 
+
+
+I am node J 
+Shortest path from J to G is: ['J', 'G'], cost: 1.9 
+Shortest path from J to H is: ['J', 'H'], cost: 1.2 
+Shortest path from J to I is: ['J', 'I'], cost: 2.4 
+Shortest path from J to B is: ['J', 'G', 'B'], cost: 4.2 
+Shortest path from J to D is: ['J', 'G', 'D'], cost: 3.6 
+Shortest path from J to E is: ['J', 'G', 'E'], cost: 3.9 
+Shortest path from J to C is: ['J', 'H', 'C'], cost: 4.2 
+Shortest path from J to F is: ['J', 'H', 'F'], cost: 2.9 
+Shortest path from J to A is: ['J', 'G', 'B', 'A'], cost: 6.2 
+
+
+I am node I 
+Shortest path from I to J is: ['I', 'J'], cost: 2.4 
+Shortest path from I to G is: ['I', 'J', 'G'], cost: 4.3 
+Shortest path from I to H is: ['I', 'J', 'H'], cost: 3.6 
+Shortest path from I to B is: ['I', 'J', 'G', 'B'], cost: 6.6 
+Shortest path from I to D is: ['I', 'J', 'G', 'D'], cost: 6.0 
+Shortest path from I to E is: ['I', 'J', 'G', 'E'], cost: 6.3 
+Shortest path from I to C is: ['I', 'J', 'H', 'C'], cost: 6.6 
+Shortest path from I to F is: ['I', 'J', 'H', 'F'], cost: 5.3 
+Shortest path from I to A is: ['I', 'J', 'G', 'B', 'A'], cost: 8.6 
+
+
