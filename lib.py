@@ -1,31 +1,31 @@
 import numpy as np
 
 
-def received_new_information(network_topology, update):
+def received_new_information(old, new):
     """
     Check whether the update packet brings real updates or it is just a redundant DataFrame that contains no more information
     than the node network_topology. It will check both difference in chape (new nodes joined, new nodes can be reached, ...) and
     if there are differences in costs when shape is the same.
-    :param network_topology: Node network topology before the update
-    :param update: Update packet sent by neighbours
+    :param old: Node network topology before the update
+    :param new: Update packet sent by neighbours
     :return: Two booleans, the first is true if the two DataFrames are different in shape (i.e. different columns and rows index), the second
     is true if the two DataFrames are equal in shape but differ for one or more cell values (this occurs when a link cost is changed after first convergence)
     """
-    updated = update.combine_first(network_topology)
-    updated_cols = list(updated.columns)
-    updated_rows = list(updated.index.values)
-    old_cols = list(network_topology.columns)
-    old_rows = list(network_topology.index.values)
-    different_shape = updated_cols != old_cols or updated_rows != old_rows
+    new_cols = list(new.columns)
+    new_rows = list(new.index.values)
+    old_cols = list(old.columns)
+    old_rows = list(old.index.values)
+    different_shape = new_cols != old_cols or new_rows != old_rows
     if not different_shape:
 
-        for col in updated_cols:
-            for row in updated_rows:
-                if not (np.isnan(network_topology[col][row]) and np.isnan(updated[col][row])) \
-                        and (np.isnan(network_topology[col][row]) or np.isnan(updated[col][row])) \
-                        and network_topology[col][row] != updated[col][row]:
-                    return False, True
-        return True, False
+        for col in new_cols:
+            for row in new_rows:
+                nt_value = old[col][row]
+                up_value = new[col][row]
+                if (nt_value == nt_value) or (up_value == up_value):
+                    if nt_value != up_value:
+                        return False, True
+        return False, False
         # rows_with_not_matching_cells = update.combine_first(network_topology)[network_topology.ne(update.combine_first(network_topology)).any(axis=1)]
         # print(rows_with_not_matching_cells)
         # return not rows_with_not_matching_cells.empty

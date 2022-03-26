@@ -32,14 +32,30 @@ class Test(TestCase):
 
     def test_received_new_information(self):
         dataframe1 = pd.DataFrame({'B': [0.0, 0.0, 0.0],
-                                   'D': [0.0, 0.0, np.nan],
+                                   'D': [0.0, np.nan, np.nan],
                                    'F': [0.0, np.nan, 0.0]},
                                   index=['A', 'B', 'E'])
 
-        dataframe2 = pd.DataFrame({'B': [100.0, 0.0, np.nan],
-                                   'D': [0.0, np.nan, 0.0],
-                                   'F': [0.0, 0.0, 0.0]},
+        dataframe2 = pd.DataFrame({'B': [100.0, 0.0, 0.0],
+                                   'D': [0.0, np.nan, np.nan],
+                                   'F': [0.0, np.nan, 0.0]},
                                   index=['A', 'B', 'E'])
-        different_shape, different_cell = received_new_information(dataframe1, dataframe2)
+
+        different_shape, different_cell = received_new_information(dataframe1, dataframe2.combine_first(dataframe1))
         self.assertEqual(different_shape, False)
         self.assertEqual(different_cell, True)
+
+        dataframe1 = pd.DataFrame({'B': [0.0, 0.0, 0.0],
+                                   'D': [0.0, np.nan, np.nan],
+                                   'F': [0.0, np.nan, 0.0]},
+                                  index=['A', 'B', 'E'])
+
+        dataframe2 = pd.DataFrame({'B': [0.0, 0.0, 0.0],
+                                   'D': [0.0, np.nan, np.nan],
+                                   'F': [0.0, np.nan, 0.0]},
+                                  index=['A', 'B', 'E'])
+
+        different_shape, different_cell = received_new_information(dataframe1, dataframe2.combine_first(dataframe1))
+        self.assertEqual(different_shape, False)
+        self.assertEqual(different_cell, False)
+
