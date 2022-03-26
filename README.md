@@ -36,5 +36,10 @@ Type link cost to change in the format [TO] [NEW_COST]. (e.g. C 2.8)
 By typing the link to change the cost at and in the specified format, the topology will be modified (but the config file will remain the same).<br>
 
 It is important to remember that:
-<ul><li>Even if the first of the two messages is prompted at the start of the program and never again, you will still be able to change link cost by tiping ```Y``` during execution, since the program will keep listening for input during its entire execution time (then the second message will be prompted).</li><li> <b> The link cost must be changed on both sides in order to be effective</b> (e.g. if we want to change link cost from G to D, we need to say to G that we want to change link cost with D and to D that we want to change the link cost with G). </li>
-Note that 
+<ul>
+  <li>
+    Even if the first of the two messages is prompted at the start of the program and never again, you will still be able to change link cost by tiping   ```Y``` during execution, since the program will keep listening for input during its entire execution time (then the second message will be prompted).    </li>
+  <li> 
+    <b> The link cost must be changed on both sides in order to be effective</b> (e.g. if we want to change link cost from G to D, we need to say to G that we want to change link cost with D and to D that we want to change the link cost with G).
+  </li>
+</ul>
