@@ -1,5 +1,5 @@
 # COMP3221 Assignment 1: Routing Algorithm
-<img src="https://user-images.githubusercontent.com/82953736/160225605-6e980123-5cf8-48a5-a349-cb65692286d2.png" width="50%">
+<p align="center"><img src="https://user-images.githubusercontent.com/82953736/160225605-6e980123-5cf8-48a5-a349-cb65692286d2.png" width="50%"></p>
 The assignment topic is the realization of a routing algorithm, running in a simulated local network composed by 10 nodes and at least 15 connections linking them with random cost. The network topology I used for running simulations is in the image above. <br>
 
 ## Environment and dependencies
