@@ -23,7 +23,7 @@ As stated in the assignment sheet, the program starts by running the following s
 python COMP3221_DiVR.py <Node-id> <Port-no> <Node-config-file>
 ```
 For simulation _n_ nodes network it is necessary to run the command on _n_ differnet instances at the same time, changing parameters each time for each node. <br>
-A node can be started at everytime and the network will recompute the shortest paths taking care of the new comer. If a node is not started, the nodes which have that node as unique neighbour will not be reached by other nodes (e.g. if node _J_ in the network above is not started, node _I_ will not be reached by anyone.
+A node can be started at everytime and the network will recompute the shortest paths taking care of the new comer. If a node is not started, the nodes which have that node as unique neighbour will not be reached by other nodes (e.g. if node _J_ in the network above is not started, node _I_(i) will not be reached by anyone.
 ### Change link cost
 Once a node is started, after a brief presentation of the node, the following message will be prompted at terminal:
 ```
