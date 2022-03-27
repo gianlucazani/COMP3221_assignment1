@@ -26,9 +26,6 @@ def received_new_information(old, new):
                     if nt_value != up_value:
                         return False, True
         return False, False
-        # rows_with_not_matching_cells = update.combine_first(network_topology)[network_topology.ne(update.combine_first(network_topology)).any(axis=1)]
-        # print(rows_with_not_matching_cells)
-        # return not rows_with_not_matching_cells.empty
     else:
         return True, False
 

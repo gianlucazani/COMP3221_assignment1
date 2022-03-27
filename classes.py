@@ -57,7 +57,8 @@ class PathFinder(threading.Thread):
         # DEL print(f"Working with {network_topology}")
         unique_identifier = count()  # resolves ties when sorting dictionaries in priority queue
         shortest_paths = dict()  # shortest_paths dictionary which will be store the result for shortest paths (same format as node.shortest_paths)
-        shortest_paths[self.node.node_id] = (0.0, self.node.node_id)  # initialize shortest path with current node information
+        shortest_paths[self.node.node_id] = (
+        0.0, self.node.node_id)  # initialize shortest path with current node information
         # ----------------------
 
         # ------ DIJKSTRA ------
@@ -173,26 +174,8 @@ class Listener(threading.Thread):
                             received.decode("utf-8"))  # update packet is a DataFrame and gets converted here from json
                         client.close()  # close the client connection
                         # print(f"{self.node.node_id} received: {update}")
-                        self.node.update_network_topology(update)  # will update only if the update packet brings new information
-                        # If the packet brings really new information
-                        # different_shape, link_cost_changed = received_new_information(self.node.network_topology, update)
-                        # print(f"Different shape: {different_shape} \n Link cost change: {link_cost_changed}")
-                        # if different_shape or link_cost_changed:
-                        #     # Update node network topology
-                        #     self
-                        #     .node.update_network_topology(
-                        #         update)  # update node network topology with the new update packet
-                        #     print(f"{self.node.node_id} network topology now: {self.node.network_topology}")
-                        #     if link_cost_changed:
-                        #         print("---------------- RECEIVED CHANGED LINK COST -------------------")
-                        #         time.sleep(5)
-                        #
-                        #     # If the first 60 second waiting time is elapsed, run the path finding algorithm every time new information are received
-                        #     if ELAPSED_60_SECONDS:
-                        #         print(
-                        #             f"{self.node.node_id} Elapsed 60 seconds and new information arrived, starting path finder for recomputing shortest paths")
-                        #         print(f"{self.node.node_id} network topology now: {self.node.network_topology}")
-                        #         self.path_finder.run()
+                        self.node.update_network_topology(
+                            update)  # will update only if the update packet brings new information
             except Exception as e:
                 print(f"Listener {self.node.node_id} Error: {e}")
 
@@ -341,8 +324,6 @@ class Node:
         self.listener.start()
         self.sender.start()
         self.timer.start()
-
-
 
     def change_link_cost(self, _to, cost):
         try:
