@@ -1,6 +1,35 @@
 # COMP3221 Assignment 1: Routing Algorithm
 <p align="center"><img src="https://user-images.githubusercontent.com/82953736/160226426-b151f6fb-5453-4c03-9069-5729491ad6dd.png" width="50%"></p>
-The assignment topic is the realization of a routing algorithm, running in a simulated local network composed by 10 nodes and at least 15 connections linking them with random cost. The network topology I used for running simulations is in the image above. <br>
+The assignment topic is the realization of a routing algorithm, running in a simulated local network composed by 10 nodes and at least 15 connections linking them with random cost. The network topology I used for running simulations is in the image above and the routing algorithm I used is the Dijkstra's shortest path algorithm <br>
+
+## Information
+The following section will guide you thorugh the simulation of the network, by eplaining how to see results of the requirements and by stating some disclaimer for having a sure correct behaviour. 
+Before diving into further informationm, here's a brief review of the implemented features:
+<ul>
+  <li>
+    Each node has no information about the network but its neighbour information.
+  </li>
+  <li>
+    The program runs in a loop forever (until it gets shutted down)
+  </li>
+  <li>
+    Each node prints at terminal shortest paths to reach each node after 60 seconds.
+  </li>
+  <li>
+    Each node can join the network at any moment and the network will converge again.
+  </li>
+  <li>
+    Link costs can be changed at any moment during execution and the network will converge automatically.
+  </li>
+  <li>
+    Changes made after the first 60 second will trigger the path finder thread which will find (eventual) new shortest paths for reaching nodes
+  </li>
+  <li>
+    When a node fails (works only if performed after first 60 seconds) the network will automatically detect the failure and will act for convergence.
+  </li>
+</ul>
+
+As last information, in the submitted .zip file you will find a ``` correct_paths.txt ``` file where all correct paths for each node are stored. The paths have been generated with the ``` networkx ``` python package by running the Dijkstra's algorithm and I used it for checking correct results.
 
 ## Environment and Dependencies
 
@@ -16,22 +45,28 @@ numpy 1.22
 ```
 
 ## Usage
-### Important reminders for correct execution
-During simulations I noticed that the system behaves correctly if we perform actions keeping in mind that:
+### Reminders for correct execution
+During simulations I noticed that the system is most likely to behave correctly if we perform actions keeping in mind that:
 <ul>
   <li>
-    Any change that will modify the network topology (i.e. node joins later, link cost change, failures) made <b>before</b> the first 60 seconds, has to be made with a decent time margin before the timeout. In general a time of about 15 seconds should be sifficient, in this time the network will reach convergence again and the output will be correct when the routing algorithm will be run for the first time.
+    Any change that will modify the network topology (i.e. node joins later, link cost change) made <b>before</b> the first 60 seconds, has to be made with a decent time margin before the timeout (at least 2 sending periods before). Failures are not well detected during the first 60 seconds.
   </li>
   <li> 
-    Any change that will modify the network topology (i.e. node joins later, link cost change, failures) made <b>after</b> the first 60 seconds, has to be only when all the nodes have output the shortest paths.
+    Any change that will modify the network topology (i.e. node joins later, link cost change, failures) made <b>after</b> the first 60 seconds, has to be made only when all the nodes have printed the shortest paths. In this case it would be better as well to wait at least one sending period before performing changes.
   </li>
   <li> 
-    Any change that will modify the network topology (i.e. node joins later, link cost change, failures) made <b>after</b> a shortest paths output, has to be made after each nodes has printed the result of shortest paths.
+    Any change that will modify the network topology (i.e. node joins later, link cost change, failures) made <b>after</b> a shortest paths output, has to be made after each nodes has printed again the result of shortest paths (i.e. after each node has reacted to changes).
   </li>
   <li> 
     Once a the Dijkstra's algorithm is triggered for any of the possible reasons, each node might have a slightly different time of computation and it might print the output few seconds late compared with others. Make sure that each node has printed the output before performing the above actions.
   </li>
+  <li> 
+    For how the newtwork is implemented, it will not react to changes that are reversions to previous configurartions seen within the same simulation (e.g. change a link cost from x to y and that bring it back to x, make a node fail and then make it alive again). This is a consequence of how I impemented the network: each node will store an history of all the versions he as seen of the network, and once a previous-seen configuration is received it gets ignored by the node. Unfortunately I figured this out too late during the project realisation and it hasn't been possible for me to start everything again for correcting this. If I had more time I would have provided each update packet with a timestamp and I would have given the highest priority to newer packets, and not just to the ones the node has never seen before.
+  </li>
+  </li> I left some debug print messages commented in the code. In case you wish to see some useful information printed at terinal, you can uncomment lines: ---------- . The information include: see which packet a node is sending, which packed a node receives and if it has seen the same packet before, see when a node detects a neighbour failure.
 </ul>
+
+### Requirements
 
 #### Starting a node
 As stated in the assignment sheet, the program starts by running the following shell command:
@@ -63,4 +98,13 @@ It is important to remember that:
 </ul>
 
 ##### Method 2
-The link cost between two nodes can be changed also by modifying the `config.txt` file. Remeber that only when the file is modified before a node joins the network the change will be effective (and not if you turn off a node, modify the file, and then turn on the node again)
+The link cost between two nodes can be changed also by modifying the `config.txt` file. Remeber that only when the file is modified before a node joins the network this kind of change will be effective (and not if you turn off a node, modify the file, and then turn on the node again).
+
+#### Node failure
+Node failure can be performed by simply shutting down the process at terminal, hence using the system keybinding for doing that ( ``` ctrl + C ``` on Windows and Mac systems). If no link cost change was performed on this node, the shut down command will need to be pressed twice (one will be interpretated as input from the link cost change prompt), otherwise only once.
+
+Node failures are detected by neighbours: when a node is unable to send packets to neighbours that have been alive in the past (this information is maintained by each node) it marks them as failed and communicate that to other nodes in the network. 
+
+## Examples
+
+
