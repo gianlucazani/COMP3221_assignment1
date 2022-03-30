@@ -34,7 +34,6 @@ class PathFinder(threading.Thread):
     def __init__(self, node):
         super().__init__()
         self.node = node
-        self.paused = True
 
     def run(self):
         """
@@ -108,18 +107,11 @@ class PathFinder(threading.Thread):
             self.node.shortest_paths = shortest_paths  # save dictionary into node attribute
             self.node.print_shortest_paths()
 
-    def pause(self):
-        self.paused = True
-
-    def wake_up(self):
-        self.paused = False
-
 
 class Sender(threading.Thread):
     def __init__(self, node):
         super().__init__()
         self.node = node
-        self.paused = False
 
     def run(self):
         print(f"{self.node.node_id} sender started")
@@ -130,25 +122,21 @@ class Sender(threading.Thread):
             port = self.node.neighbours_ports[key]
             connected_for_first_time[port] = [key, False]
             alive[port] = [key, False]
-        while not self.paused:  # try to send data until the thread is not stopped, if not stopped it will pass through exceptions without stopping
+        while 1:  # try to send data until the thread is not stopped, if not stopped it will pass through exceptions without stopping
             try:
                 while 1:
                     time.sleep(10)
                     to_send = self.node.network_topology.to_json()  # converts network_topology DataFrame to json
                     # print(f"{self.node.node_id} wants to send: \n {self.node.network_topology}")
                     for destination_port in list(self.node.neighbours_ports.values()):  # send data to all neighbours
-
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             # print(f"Port to send: {port_to_send}")
-
                             try:
                                 s.connect((HOST, int(destination_port)))
                                 s.sendall(bytes(to_send, encoding="utf-8"))
                                 s.close()
                                 connected_for_first_time[destination_port][1] = True
                                 alive[destination_port][1] = True
-                                # print(connected_for_first_time)
-                                # print(alive)
                             except Exception as e:
                                 if connected_for_first_time[destination_port][1] and alive[destination_port][1]:  # if i managed to connect to the node in the past but now I cannot, it means it is broken
                                     print(f"Node {connected_for_first_time[destination_port][0]} failed")
@@ -162,18 +150,11 @@ class Sender(threading.Thread):
                 continue
                 # print(f"Sender {self.node.node_id} error when communicating with port {destination_port}: {e}")
 
-    def pause(self):
-        self.paused = True
-
-    def wake_up(self):
-        self.paused = False
-
 
 class Listener(threading.Thread):
     def __init__(self, node):
         super().__init__()
         self.node = node
-        self.paused = False
 
     def run(self):
         print(f"{self.node.node_id} listener started")
@@ -199,12 +180,6 @@ class Listener(threading.Thread):
                                 update)  # will update only if the update packet brings new information
             except Exception as e:
                 print(f"Listener {self.node.node_id} Error: {e}")
-
-    def pause(self):
-        self.paused = True
-
-    def wake_up(self):
-        self.paused = False
 
 
 class Node:
@@ -298,29 +273,31 @@ class Node:
                         E  x   y   x   y   y
 
         Before updating the network topology checks if the new package actually brings new information or not and if the package has been seen before
-        by the node (avoiding cases where newer information get replace by older ones)
+        by the node (avoiding cases where newer information owned by node get replaced by older ones owned by neighbours)
 
         :param update: DataFrame representing network topology sent by a neighbour
         """
         different_shape, link_cost_changed = received_new_information(self.network_topology, update)
         if (different_shape or link_cost_changed) and not self.seen_before(update):
-            self.network_topology_history.append(update)
-            do_not_update = dict()
+            self.network_topology_history.append(update)  # store update in history of received packets
+            do_not_update = dict()  # will store values that have not to be overwritten be update message (i.e. values about node neighbours)
             for key in self.neighbours_ports:
                 do_not_update[key] = self.network_topology[self.node_id][key]
-            update.replace(np.nan, -1, inplace=True)
+            update.replace(np.nan, -1, inplace=True)  # replace with -1 is necessary because using DataFrame1.combine_first(DataFrame1) will not update DataFrame2 values with DataFrame1 NaN values (While I want that this happens when a node fails)
             self.network_topology = update.combine_first(self.network_topology)
-            update.replace(-1, np.nan, inplace=True)
-            self.network_topology.replace(-1, np.nan, inplace=True)
+            update.replace(-1, np.nan, inplace=True)  # replace -1 back to NaN
+            self.network_topology.replace(-1, np.nan, inplace=True)  # replace -1 back to NaN
+
+            # Retrieve neighbour information from do_not_update and insert them in the new network topology
             for key in do_not_update:
                 to_replace = self.network_topology[self.node_id][key]
-                if to_replace == to_replace:  # i.e. to_replace is not NaN
+                if to_replace == to_replace:  # i.e. to_replace is not NaN. I don't want NaN to be replaced because they might notify a failure of a neighbour node
                     self.network_topology[self.node_id][key] = do_not_update[key]
             self.network_topology_history.append(self.network_topology)
             if link_cost_changed and ELAPSED_60_SECONDS:
                 self.path_finder.run()
                 return
-            if ELAPSED_60_SECONDS:
+            if ELAPSED_60_SECONDS:  # run path finder will be triggered for different shape only after 60 seconds
                 self.path_finder.run()
                 return
 
@@ -366,7 +343,6 @@ class Node:
         """
         Turns on the node starting threads
         """
-        # self.failure_detector.start()
         self.sender.start()
         self.listener.start()
         self.timer.start()
