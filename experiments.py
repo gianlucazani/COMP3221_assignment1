@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import heapq as hq
 from itertools import count
-
 df2 = pd.DataFrame({'A': [0, 1, np.nan],
                     'B': [1.5, 0, np.nan],
                     'C': [0.5, 1, np.nan]},
@@ -23,25 +22,34 @@ new_index = new.index.union(df2.index)
 dataframe1 = pd.DataFrame({'A': ["x", "x", "x"]},
                           index=['A', 'D', 'E'])
 
-dataframe2 = pd.DataFrame({'B': ["y", "y", "y"],
-                           'D': ["y", "y", "y"],
-                           'F': ["y", "y", "y"]},
+dataframe2 = pd.DataFrame({'B': [0.0, 0.0, 0.0],
+                           'D': [0.0, 0.0, 0.0],
+                           'F': [0.0, 0.0, 0.0]},
                           index=['A', 'D', 'E'])
+
+dataframe5 = pd.DataFrame({'B': [np.nan, 0.0, 0.0],
+                           'D': [0.0, 0.0, 0.0],
+                           'F': [0.0, 0.0, 0.0]},
+                          index=['A', 'D', 'E'])
+
 
 dataframe3 = pd.DataFrame({'A': ["y", "y", "y", "f"],
                            'D': ["y", "y", "y", "c"]},
                           index=['A', 'B', 'G', "K"])
 
-dataframe4 = pd.DataFrame({'A': ["g", "y", "y", "Y"],
-                           'D': ["y", "y", "y", "y"],
+dataframe4 = pd.DataFrame({'A': [0.0, 0.0, 0.0, np.nan],
+                           'D': [0.0, 0.0, 0.0, np.nan],
                            'F': [0.0, 0.0, 0.0, np.nan]},
                           index=['A', 'B', 'G', "F"])
 
-dataframe5 = dataframe4.combine_first(dataframe3)
-
-print(np.nan != np.nan)
-print(dataframe5)
-print(np.isnan(dataframe5["F"]["K"]))
+dataframe4["A"]["F"]=100
+print(dataframe4)
+dataframe4["D"] = np.nan
+for col in dataframe4:
+    dataframe4[col]["G"] = np.nan
+dataframe5.replace(np.nan, -1, inplace=True)
+dfff = dataframe5.combine_first(dataframe2)
+dfff.replace(-1, np.nan, inplace=True)
 
 #print(dataframe3.combine_first(dataframe1))
 

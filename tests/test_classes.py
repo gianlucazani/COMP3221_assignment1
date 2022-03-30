@@ -32,7 +32,17 @@ class TestNode(TestCase):
                                    'F': [0.0, np.nan, 0.0]},
                                   index=['A', 'B', 'E'])
 
-        history = [dataframe1, dataframe2]
+        dataframe4 = pd.DataFrame({'B': [1.0, 0.0, 0.0],
+                                   'D': [0.0, np.nan, np.nan],
+                                   'F': [0.0, np.nan, 0.0]},
+                                  index=['A', 'B', 'E'])
+
+        history = list()
+        history.append(dataframe1)
+        history.append(dataframe2)
 
         self.assertEqual(seen_before(history, dataframe3), False)
-        self.assertEqual(seen_before(history, dataframe1), True)
+        self.assertEqual(seen_before(history, dataframe4), True)
+
+
+        update1

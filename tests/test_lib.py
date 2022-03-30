@@ -3,7 +3,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 
-from assignment1.lib import extract_path, received_new_information
+from assignment1.lib import extract_path, received_new_information, remove_failed
 
 
 class Test(TestCase):
@@ -59,3 +59,15 @@ class Test(TestCase):
         self.assertEqual(different_shape, False)
         self.assertEqual(different_cell, False)
 
+    def test_remove_failed(self):
+        dataframe1 = pd.DataFrame({'B': [0.0, np.inf, 0.0],
+                                   'D': [np.inf, np.inf, np.inf],
+                                   'F': [0.0, np.inf, 0.0]},
+                                  index=['A', 'B', 'E'])
+
+        dataframe2 = pd.DataFrame({'B': [0.0, 0.0],
+                                   'F': [0.0, 0.0]},
+                                  index=['A', 'E'])
+        check1, check2 = received_new_information(remove_failed(dataframe1), dataframe2)
+        self.assertEqual(check1, False)
+        self.assertEqual(check2, False)

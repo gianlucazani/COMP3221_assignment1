@@ -5,7 +5,7 @@ import time
 import numpy as np
 import pandas as pd
 from itertools import count
-from lib import extract_path, get_neighbours, received_new_information
+from lib import extract_path, get_neighbours, received_new_information, remove_failed
 
 HOST = "127.0.0.1"
 # Global variable for letting listener thread know that the first 60 seconds elapsed
@@ -45,20 +45,18 @@ class PathFinder(threading.Thread):
         network_topology = self.node.network_topology.copy()  # save node network topology as a copy so that the original can be modified while the algorithm is running
         network_topology.fillna(np.inf, inplace=True)  # replace NaN values with +inf
         network_topology.replace(np.nan, np.inf)
-
+        network_topology = remove_failed(network_topology)
         # We want to compute shortest paths only from alive nodes and to alive nodes
         all_nodes = list(
             network_topology.index.values)  # list of all nodes built from neighbour information of alive nodes (we cannot assume that all of them are reachable)
         nodes_alive = list(network_topology)  # list of actually alive nodes that
         nodes_to_work_with = list(set(all_nodes) - set(nodes_alive))
-        # DEL print(f"Nodes to work with: {nodes_to_work_with}")
         network_topology.drop(labels=nodes_to_work_with,
                               inplace=True)  # remove lines corresponding to neighbours of alive nodes that are not alive themselves
-        # DEL print(f"Working with {network_topology}")
         unique_identifier = count()  # resolves ties when sorting dictionaries in priority queue
         shortest_paths = dict()  # shortest_paths dictionary which will be store the result for shortest paths (same format as node.shortest_paths)
         shortest_paths[self.node.node_id] = (
-        0.0, self.node.node_id)  # initialize shortest path with current node information
+            0.0, self.node.node_id)  # initialize shortest path with current node information
         # ----------------------
 
         # ------ DIJKSTRA ------
@@ -98,7 +96,7 @@ class PathFinder(threading.Thread):
                     # and save the current node as previous node in the path for reaching the neighbour from the start
                     if (cost_start_to_current + cost_current_to_neighbour) < shortest_paths[neighbour][0]:
                         shortest_paths[neighbour] = (
-                            cost_start_to_current + cost_current_to_neighbour,  # distance
+                            round(cost_start_to_current + cost_current_to_neighbour, 2),  # distance
                             current_node[2]['id'])
 
             visited.add(current_node[2]['id'])  # add current node to visited
@@ -125,23 +123,44 @@ class Sender(threading.Thread):
 
     def run(self):
         print(f"{self.node.node_id} sender started")
+        connected_for_first_time = dict()  # ( key = port_number, value = (neighbour_id, boolean))
+        alive = dict()
+
+        for key in self.node.neighbours_ports.keys():
+            port = self.node.neighbours_ports[key]
+            connected_for_first_time[port] = [key, False]
+            alive[port] = [key, False]
         while not self.paused:  # try to send data until the thread is not stopped, if not stopped it will pass through exceptions without stopping
             try:
                 while 1:
                     time.sleep(10)
+                    to_send = self.node.network_topology.to_json()  # converts network_topology DataFrame to json
+                    # print(f"{self.node.node_id} wants to send: \n {self.node.network_topology}")
                     for destination_port in list(self.node.neighbours_ports.values()):  # send data to all neighbours
-                        to_send = self.node.network_topology.to_json()  # converts network_topology DataFrame to json
+
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             # print(f"Port to send: {port_to_send}")
-                            # print(f"{self.node.node_id} wants to send: {self.node.network_topology}")
+
                             try:
                                 s.connect((HOST, int(destination_port)))
+                                s.sendall(bytes(to_send, encoding="utf-8"))
+                                s.close()
+                                connected_for_first_time[destination_port][1] = True
+                                alive[destination_port][1] = True
+                                # print(connected_for_first_time)
+                                # print(alive)
                             except Exception as e:
-                                continue
-                            s.sendall(bytes(to_send, encoding="utf-8"))
-                            s.close()
+                                if connected_for_first_time[destination_port][1] and alive[destination_port][1]:  # if i managed to connect to the node in the past but now I cannot, it means it is broken
+                                    print(f"Node {connected_for_first_time[destination_port][0]} failed")
+                                    alive[destination_port][1] = False
+                                    self.node.neighbour_failed(connected_for_first_time[destination_port][
+                                                                   0])  # node will update its network topology
+                                    continue
+                                else:
+                                    continue
             except Exception as e:
-                print(f"Sender {self.node.node_id} error when communicating with port {destination_port}: {e}")
+                continue
+                # print(f"Sender {self.node.node_id} error when communicating with port {destination_port}: {e}")
 
     def pause(self):
         self.paused = True
@@ -173,9 +192,11 @@ class Listener(threading.Thread):
                         update = pd.read_json(
                             received.decode("utf-8"))  # update packet is a DataFrame and gets converted here from json
                         client.close()  # close the client connection
-                        # print(f"{self.node.node_id} received: {update}")
-                        self.node.update_network_topology(
-                            update)  # will update only if the update packet brings new information
+                        different_shape, link_cost_changed = received_new_information(self.node.network_topology, update)
+                        if different_shape or link_cost_changed:
+                            # print(f"{self.node.node_id} received: \n {update}")
+                            self.node.update_network_topology(
+                                update)  # will update only if the update packet brings new information
             except Exception as e:
                 print(f"Listener {self.node.node_id} Error: {e}")
 
@@ -283,14 +304,25 @@ class Node:
         """
         different_shape, link_cost_changed = received_new_information(self.network_topology, update)
         if (different_shape or link_cost_changed) and not self.seen_before(update):
-            self_column = self.network_topology[self.node_id]
+            self.network_topology_history.append(update)
+            do_not_update = dict()
+            for key in self.neighbours_ports:
+                do_not_update[key] = self.network_topology[self.node_id][key]
+            update.replace(np.nan, -1, inplace=True)
             self.network_topology = update.combine_first(self.network_topology)
-            self.network_topology[self.node_id] = self_column.reindex(self.network_topology[self.node_id].index)
+            update.replace(-1, np.nan, inplace=True)
+            self.network_topology.replace(-1, np.nan, inplace=True)
+            for key in do_not_update:
+                to_replace = self.network_topology[self.node_id][key]
+                if to_replace == to_replace:  # i.e. to_replace is not NaN
+                    self.network_topology[self.node_id][key] = do_not_update[key]
             self.network_topology_history.append(self.network_topology)
+            if link_cost_changed and ELAPSED_60_SECONDS:
+                self.path_finder.run()
+                return
             if ELAPSED_60_SECONDS:
                 self.path_finder.run()
-            if link_cost_changed:
-                self.path_finder.run()
+                return
 
     def seen_before(self, update):
         """
@@ -301,10 +333,11 @@ class Node:
         :returns True if the packet has been seen before by the node, False otherwise
         """
         for nt in self.network_topology_history:
-            different_shape, link_cost_changed = received_new_information(nt,
-                                                                          update.combine_first(self.network_topology))
+            different_shape, link_cost_changed = received_new_information(nt, update)
             if not different_shape and not link_cost_changed:
+                # print("------ SEEN BEFORE -------")
                 return True
+        # print("------ NOT SEEN BEFORE -------")
         return False
 
     def print_shortest_paths(self):
@@ -317,12 +350,25 @@ class Node:
                 print(
                     f"Least cost path from {self.node_id} to {destination}: {extract_path(self.shortest_paths, self.node_id, destination)}, link cost: {self.shortest_paths[destination][0]} ")
 
+    def neighbour_failed(self, neighbour_id):
+        self.network_topology_history.append(self.network_topology)
+        self.network_topology[
+            neighbour_id] = np.nan  # replaces all values in the column of neighbour_id with NaN values (states that a node is not alive anymore)
+        for col in self.network_topology:
+            self.network_topology[col][
+                neighbour_id] = np.nan  # replaces all values in the column of neighbour_id with NaN values (states that the node is not reachable anymore)
+        print(f"topology after failure {self.network_topology}")
+        self.network_topology_history.append(self.network_topology)
+        if ELAPSED_60_SECONDS:
+            self.path_finder.run()
+
     def start(self):
         """
         Turns on the node starting threads
         """
-        self.listener.start()
+        # self.failure_detector.start()
         self.sender.start()
+        self.listener.start()
         self.timer.start()
 
     def change_link_cost(self, _to, cost):

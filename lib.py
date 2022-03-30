@@ -37,7 +37,7 @@ def get_neighbours(node_id, network_topology):
     :return: neighbours ids as a list
     """
     neighbours = network_topology.index[network_topology[
-                                            node_id] != np.inf].tolist()  # indexes of nodes which distance from node_id is not +inf (i.e. neighbours)
+                                            node_id] < np.inf].tolist()  # indexes of nodes which distance from node_id is not +inf (i.e. neighbours)
     if neighbours.__len__() > 1:
         neighbours.remove(node_id)
     return neighbours
@@ -55,3 +55,25 @@ def extract_path(shortest_paths_dict, _from, _to):
         return _from
     else:
         return extract_path(shortest_paths_dict, _from, shortest_paths_dict[_to][1]) + _to
+
+
+def remove_failed(network_topology):
+    for col in network_topology:
+        remove_col = True
+        for row in list(network_topology.index.values):
+            if network_topology[col][row] != np.inf:
+                remove_col = False
+                break
+        if remove_col:
+            network_topology.drop(col, axis=1, inplace=True)
+
+    for row in list(network_topology.index.values):
+        remove_row = True
+        for col in network_topology:
+            if network_topology[col][row] != np.inf:
+                remove_row = False
+                break
+        if remove_row:
+            network_topology.drop(row, axis=0, inplace=True)
+
+    return network_topology
