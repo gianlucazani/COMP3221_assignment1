@@ -1,10 +1,10 @@
 # COMP3221 Assignment 1: Routing Algorithm
 <p align="center"><img src="https://user-images.githubusercontent.com/82953736/160226426-b151f6fb-5453-4c03-9069-5729491ad6dd.png" width="50%"></p>
-The assignment topic is the realization of a routing algorithm, running in a simulated local network composed by 10 nodes and at least 15 connections linking them with random cost. The network topology I used for running simulations is in the image above and the routing algorithm I used is the Dijkstra's shortest path algorithm <br>
+The assignment topic is the realization of a routing algorithm, running in a simulated local network composed of 10 nodes and at least 15 connections linking them with random cost. The network topology I used for running simulations is in the image above and the routing algorithm I used is the Dijkstra's shortest path algorithm <br>
 
 ## Information
-The following section will guide you thorugh the simulation of the network, by eplaining how to see results of the requirements and by stating some disclaimer for having a sure correct behaviour. 
-Before diving into further informationm, here's a brief review of the implemented features:
+The following section will guide you through the simulation of the network, by explaining how to see results of the requirements and by stating some disclaimer for having a sure correct behaviour. 
+Before diving into further information, here's a brief review of the implemented features:
 <ul>
   <li>
     Each node has no information about the network but its neighbour information.
@@ -25,11 +25,11 @@ Before diving into further informationm, here's a brief review of the implemente
     Changes made after the first 60 second will trigger the path finder thread which will find (eventual) new shortest paths for reaching nodes
   </li>
   <li>
-    When a node fails (works only if performed after first 60 seconds) the network will automatically detect the failure and will act for convergence.
+    When a node fails (works only if performed after the first 60 seconds) the network will automatically detect the failure and will act for convergence.
   </li>
 </ul>
 
-As last information, in the submitted .zip file you will find a ``` correct_paths.txt ``` file where all correct paths for each node are stored. The paths have been generated with the ``` networkx ``` python package by running the Dijkstra's algorithm and I used it for checking correct results.
+As last information, in the submitted .zip file you will find a ``` correct_paths.txt ``` file where all correct paths for each node are stored. The paths have been generated with the ``` networkx ``` python package by running Dijkstra's algorithm and I used it for checking correct results.
 
 ## Environment and Dependencies
 
@@ -58,10 +58,10 @@ During simulations I noticed that the system is most likely to behave correctly 
     Any change that will modify the network topology (i.e. node joins later, link cost change, failures) made <b>after</b> a shortest paths output, has to be made after each nodes has printed again the result of shortest paths (i.e. after each node has reacted to changes).
   </li>
   <li> 
-    Once a the Dijkstra's algorithm is triggered for any of the possible reasons, each node might have a slightly different time of computation and it might print the output few seconds late compared with others. Make sure that each node has printed the output before performing the above actions.
+    Once Dijkstra's algorithm is triggered for any of the possible reasons, each node might have a slightly different time of computation and it might print the output a few seconds later compared with others. Make sure that each node has printed the output before performing the above actions.
   </li>
   <li> 
-    For how the newtwork is implemented, it will not react to changes that are reversions to previous configurartions seen within the same simulation (e.g. change a link cost from x to y and that bring it back to x, make a node fail and then make it alive again). This is a consequence of how I impemented the network: each node will store an history of all the versions he as seen of the network, and once a previous-seen configuration is received it gets ignored by the node. Unfortunately I figured this out too late during the project realisation and it hasn't been possible for me to start everything again for correcting this. If I had more time I would have provided each update packet with a timestamp and I would have given the highest priority to newer packets, and not just to the ones the node has never seen before.
+    For how the network is implemented, it will not react to changes that are reversions to previous configurations seen within the same simulation (e.g. change a link cost from x to y and that bring it back to x, make a node fail and then make it alive again). This is a consequence of how I implemented the network: each node will store an history of all the versions he has seen of the network, and once a previous-seen configuration is received it gets ignored by the node. Unfortunately I figured this out too late during the project realisation and it hasn't been possible for me to start everything again to correct this. If I had more time I would have provided each update packet with a timestamp and I would have given the highest priority to newer packets, and not just to the ones the node has never seen before.
   </li>
   </li> I left some debug print messages commented in the code. In case you wish to see some useful information printed at terinal, you can uncomment lines: ---------- . The information include: see which packet a node is sending, which packed a node receives and if it has seen the same packet before, see when a node detects a neighbour failure.
 </ul>
@@ -73,8 +73,8 @@ As stated in the assignment sheet, the program starts by running the following s
 ```
 python COMP3221_DiVR.py <Node-id> <Port-no> <Node-config-file>
 ```
-For simulation _n_ nodes network it is necessary to run the command on _n_ differnet instances at the same time, changing parameters each time for each node. <br>
-A node can be started at everytime and the network will recompute the shortest paths taking care of the new comer. If a node is not started, the nodes which have that node as unique neighbour will not be reached by other nodes (e.g. if node _J_ in the network above is not started, node _I_(i) will not be reached by anyone).
+For simulation _n_ nodes network it is necessary to run the command on _n_ different instances at the same time, changing parameters each time for each node. <br>
+A node can be started at any time and the network will recompute the shortest paths taking care of the newcomer. If a node is not started, the nodes which have that node as a unique neighbour will not be reached by other nodes (e.g. if node _J_ in the network above is not started, node _I_(i) will not be reached by anyone).
 #### Change link cost
 Before explaining how the link cost can be performed, a disclaimer has to be made: once the link cost from a node X to a node Y is changed, reverting the operation will not be effective on the network (unless the network is restarted). 
 ##### Method 1
@@ -98,14 +98,14 @@ It is important to remember that:
 </ul>
 
 ##### Method 2
-The link cost between two nodes can be changed also by modifying the `config.txt` file. Remeber that only when the file is modified before a node joins the network this kind of change will be effective (and not if you turn off a node, modify the file, and then turn on the node again).
+The link cost between two nodes can be changed also by modifying the `config.txt` file. Remember that only when the file is modified before a node joins the network this kind of change will be effective (and not if you turn off a node, modify the file, and then turn on the node again).
 
 #### Node failure
-Node failure can be performed by simply shutting down the process at terminal, hence using the system keybinding for doing that ( ``` ctrl + C ``` on Windows and Mac systems). If no link cost change was performed on this node, the shut down command will need to be pressed twice (one will be interpretated as input from the link cost change prompt), otherwise only once.
+Node failure can be performed by simply shutting down the process at terminal, hence using the system keybinding for doing that ( ``` ctrl + C ``` on Windows and Mac systems). If no link cost change was performed on this node, the shutdown command will need to be pressed twice (one will be iterpreted as input from the link cost change prompt), otherwise only once.
 
-Node failures are detected by neighbours: when a node is unable to send packets to neighbours that have been alive in the past (this information is maintained by each node) it marks them as failed and communicate that to other nodes in the network. 
+Node failures are detected by neighbours: when a node is unable to send packets to neighbours that have been alive in the past (this information is maintained by each node) it marks them as failed and communicates that to other nodes in the network. 
 
-Remember that node failures are not well correctly detected if the occure before the first 60 seconds.
+Remember that node failures are not well correctly detected if they occur before the first 60 seconds.
 
 ## Examples
 
@@ -143,11 +143,11 @@ Least cost path from F to I: FHJI, link cost: 5.3
 Least cost path from F to J: FHJ, link cost: 2.9 
 ```
 
-You can see that the shortest path for reaching E is changed and the more convinient now is FDGBE instead of FDGE.
+You can see that the shortest path for reaching E is changed and the more convenient now is FDGBE instead of FDGE.
 
 #### Example 2 - Before 60 second elapsed
 
-Here's what node F outputs for the first time after 60 second elapse. During those 60 seocnds link cost from H to J changed to 30.0:
+Here's what node F outputs for the first time after a 60 second elapse. During those 60 seconds link cost from H to J changed to 30.0:
 ```
 I am node F
 Least cost path from F to A: FCA, link cost: 3.6 
@@ -161,7 +161,7 @@ Least cost path from F to I: FDGJI, link cost: 7.5
 Least cost path from F to J: FDGJ, link cost: 5.1
 ```
 
-You can see that the path F -> H is not convinient anymore, for example going to J now costs less if we go for FDGJI.
+You can see that the path F -> H is not convenient anymore, for example going to J now costs less if we go for FDGJI.
 
 ### Node failure
 
@@ -182,7 +182,7 @@ Least cost path from A to I: ABGJI, link cost: 8.6
 Least cost path from A to J: ABGJ, link cost: 6.2 
 ```
 
-And this is what A outputs once node J failed. As you can see both node I and node J are not reachable anymore (J is I's only neighbour):
+And this is what A outputs once node J fails. As you can see both node I and node J are not reachable anymore (J is I's only neighbour):
 
 ```
 I am node A
@@ -197,7 +197,7 @@ Least cost path from A to H: ACH, link cost: 5.0
 
 #### Example 2 - Multiple failures
 
-By going on from Example 1 above, we can make other nodes fail after J. We will keep node A's output monitored and we'll see hopw the node responds to these failures. 
+By going on from Example 1 above, we can make other nodes fail after J. We will keep node A's output monitored and we'll see how the node responds to these failures. 
 
 Node H fails:
 
