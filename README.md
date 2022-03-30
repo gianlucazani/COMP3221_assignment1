@@ -105,6 +105,127 @@ Node failure can be performed by simply shutting down the process at terminal, h
 
 Node failures are detected by neighbours: when a node is unable to send packets to neighbours that have been alive in the past (this information is maintained by each node) it marks them as failed and communicate that to other nodes in the network. 
 
+Remember that node failures are not well correctly detected if the occure before the first 60 seconds.
+
 ## Examples
 
+### Link cost change
+
+#### Example 1 - After 60 seconds elapsed
+
+Node F output before link cost changes:
+
+```
+I am node F
+Least cost path from F to A: FCA, link cost: 3.6 
+Least cost path from F to B: FDGB, link cost: 5.5 
+Least cost path from F to C: FC, link cost: 1.6 
+Least cost path from F to D: FD, link cost: 1.5 
+Least cost path from F to E: FDGE, link cost: 5.2 
+Least cost path from F to G: FDG, link cost: 3.2 
+Least cost path from F to H: FH, link cost: 1.7 
+Least cost path from F to I: FHJI, link cost: 5.3 
+Least cost path from F to J: FHJ, link cost: 2.9
+```
+
+Node F output after cost E to G changed to 50.0:
+
+```
+I am node F
+Least cost path from F to A: FCA, link cost: 3.6 
+Least cost path from F to B: FDGB, link cost: 5.5 
+Least cost path from F to C: FC, link cost: 1.6 
+Least cost path from F to D: FD, link cost: 1.5 
+Least cost path from F to E: FDGBE, link cost: 7.5 
+Least cost path from F to G: FDG, link cost: 3.2 
+Least cost path from F to H: FH, link cost: 1.7 
+Least cost path from F to I: FHJI, link cost: 5.3 
+Least cost path from F to J: FHJ, link cost: 2.9 
+```
+
+You can see that the shortest path for reaching E is changed and the more convinient now is FDGBE instead of FDGE.
+
+#### Example 2 - Before 60 second elapsed
+
+Here's what node F outputs for the first time after 60 second elapse. During those 60 seocnds link cost from H to J changed to 30.0:
+```
+I am node F
+Least cost path from F to A: FCA, link cost: 3.6 
+Least cost path from F to B: FDGB, link cost: 5.5 
+Least cost path from F to C: FC, link cost: 1.6 
+Least cost path from F to D: FD, link cost: 1.5 
+Least cost path from F to E: FDGE, link cost: 5.2 
+Least cost path from F to G: FDG, link cost: 3.2 
+Least cost path from F to H: FH, link cost: 1.7 
+Least cost path from F to I: FDGJI, link cost: 7.5 
+Least cost path from F to J: FDGJ, link cost: 5.1
+```
+
+You can see that the path F -> H is not convinient anymore, for example going to J now costs less if we go for FDGJI.
+
+### Node failure
+
+#### Example 1 - Single failure
+
+In this example we make node J fail and we will see how A output changes in response to the failure. Here is what A outputs before node J fails:
+
+```
+I am node A
+Least cost path from A to B: AB, link cost: 2.0 
+Least cost path from A to C: AC, link cost: 2.0 
+Least cost path from A to D: ACD, link cost: 3.6 
+Least cost path from A to E: ABE, link cost: 4.0 
+Least cost path from A to F: ACF, link cost: 3.6 
+Least cost path from A to G: ABG, link cost: 4.3 
+Least cost path from A to H: ACH, link cost: 5.0 
+Least cost path from A to I: ABGJI, link cost: 8.6 
+Least cost path from A to J: ABGJ, link cost: 6.2 
+```
+
+And this is what A outputs once node J failed. As you can see both node I and node J are not reachable anymore (J is I's only neighbour):
+
+```
+I am node A
+Least cost path from A to B: AB, link cost: 2.0 
+Least cost path from A to C: AC, link cost: 2.0 
+Least cost path from A to D: ACD, link cost: 3.6 
+Least cost path from A to E: ABE, link cost: 4.0 
+Least cost path from A to F: ACF, link cost: 3.6 
+Least cost path from A to G: ABG, link cost: 4.3 
+Least cost path from A to H: ACH, link cost: 5.0 
+```
+
+#### Example 2 - Multiple failures
+
+By going on from Example 1 above, we can make other nodes fail after J. We will keep node A's output monitored and we'll see hopw the node responds to these failures. 
+
+Node H fails:
+
+```
+I am node A
+Least cost path from A to B: AB, link cost: 2.0 
+Least cost path from A to C: AC, link cost: 2.0 
+Least cost path from A to D: ACD, link cost: 3.6 
+Least cost path from A to E: ABE, link cost: 4.0 
+Least cost path from A to F: ACF, link cost: 3.6 
+Least cost path from A to G: ABG, link cost: 4.3 
+```
+
+Then node B fails (node that paths to G and E change):
+
+```
+Least cost path from A to C: AC, link cost: 2.0 
+Least cost path from A to D: ACD, link cost: 3.6 
+Least cost path from A to E: ACDGE, link cost: 7.3 
+Least cost path from A to F: ACF, link cost: 3.6 
+Least cost path from A to G: ACDG, link cost: 5.3 
+```
+
+And finally we can make G fails, so that E becomes unreachable event if it is still alive (like node I):
+
+```
+I am node A
+Least cost path from A to C: AC, link cost: 2.0 
+Least cost path from A to D: ACD, link cost: 3.6 
+```
 
