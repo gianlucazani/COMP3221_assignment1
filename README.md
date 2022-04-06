@@ -65,7 +65,7 @@ During simulations, I noticed that the system is most likely to behave correctly
   <li> 
     For how the network is implemented, it will not react to changes that are reversions to previous configurations seen within the same simulation (e.g. change a link cost from x to y and bring it back to x, make a node fail and then make it alive again). This is a consequence of how I implemented the network: each node will store a history of all the versions he has seen of the network, and once a previous-seen configuration is received it gets ignored by the node. Unfortunately, I figured this out too late during the project realisation and it hasn't been possible for me to start everything again to correct this. If I had more time I would have provided each update packet with a timestamp and I would have given the highest priority to newer packets, and not just to the ones the node has never seen before.
   </li>
-  </li> I left some debug print messages commented in the file ```classes.py``` code. In case you wish to see some useful information printed at terminal, you can uncomment lines: 130, 133, 178, 315, 317. The information includes: seeing which packet a node is sending, which packed a node receives and if it has seen the same packet before, see when a node detects a neighbour failure.
+  </li> I left some debug print messages commented in the file ```classes.py``` code. In case you wish to see some useful information printed at terminal, you can uncomment lines: 130, 133, 178, 315, 317. The information includes: seeing which packet a node is sending, which packed a node receives and if it has seen the same packet before, see when a node detects a neighbour failure.</li>
 </ul>
 
 ### Requirements
