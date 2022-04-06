@@ -65,7 +65,7 @@ During simulations, I noticed that the system is most likely to behave correctly
   <li> 
     For how the network is implemented, it will not react to changes that are reversions to previous configurations seen within the same simulation (e.g. change a link cost from x to y and bring it back to x, make a node fail and then make it alive again). This is a consequence of how I implemented the network: each node will store a history of all the versions he has seen of the network, and once a previous-seen configuration is received it gets ignored by the node. Unfortunately, I figured this out too late during the project realisation and it hasn't been possible for me to start everything again to correct this. If I had more time I would have provided each update packet with a timestamp and I would have given the highest priority to newer packets, and not just to the ones the node has never seen before.
   </li>
-  </li> I left some debug print messages commented in the code. In case you wish to see some useful information printed at terminal, you can uncomment lines: ---------- . The information includes: seeing which packet a node is sending, which packed a node receives and if it has seen the same packet before, see when a node detects a neighbour failure.
+  </li> I left some debug print messages commented in the file ```classes.py``` code. In case you wish to see some useful information printed at terminal, you can uncomment lines: 130, 133, 178, 315, 317. The information includes: seeing which packet a node is sending, which packed a node receives and if it has seen the same packet before, see when a node detects a neighbour failure.
 </ul>
 
 ### Requirements
@@ -76,7 +76,8 @@ As stated in the assignment sheet, the program starts by running the following s
 python COMP3221_DiVR.py <Node-id> <Port-no> <Node-config-file>
 ```
 For simulation _n_ nodes network it is necessary to run the command on _n_ different instances at the same time, changing parameters each time for each node. <br>
-A node can be started at any time and the network will recompute the shortest paths taking care of the newcomer. If a node is not started, the nodes which have that node as a unique neighbour will not be reached by other nodes (e.g. if node _J_ in the network above is not started, node _I_(i) will not be reached by anyone).
+A node can be started at any time and the network will recompute the shortest paths taking care of the newcomer. If a node is not started, the nodes which have that node as a unique neighbour will not be reached by other nodes (e.g. if node _J_ in the network above is not started, node _I_(i) will not be reached by anyone). <br>
+Config files for each node are inside the ```config_files``` folder.
 #### Change link cost
 Before explaining how the link cost can be performed, a disclaimer has to be made: once the link cost from a node X to a node Y is changed, reverting the operation will not be effective on the network (unless the network is restarted). 
 ##### Method 1
